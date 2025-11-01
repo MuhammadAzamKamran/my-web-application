@@ -1,0 +1,6 @@
+﻿{
+  "user": { "email": "alice@example.com", "displayName": "Alice" },
+  "document": { "title": "Hello", "description": "Demo" },
+  "comments": [ { "body": "first" } ],
+  "tags": [ "demo" ]
+}

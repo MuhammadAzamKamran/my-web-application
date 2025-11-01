@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload File</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .upload-area {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 2px dashed #ddd;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+
+        .upload-area.dragover {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+
+        .upload-text {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e8;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .metadata-form {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .upload-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .nav-links {
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            color: #3498db;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-links a:hover {
+            background-color: #e3f2fd;
+        }
+
+        .nav-links a.active {
+            background-color: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Upload File
+    </div>
+
+    <div class="container">
+        <div class="nav-links">
+            <a href="upload.html" class="active">Upload File</a>
+            <a href="files.html">Your Files</a>
+            <a href="#" onclick="handleLogout(); return false;" style="float: right; color: #e74c3c;">Logout</a>
+        </div>
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-text">Drag & Drop File Here or Click to Upload</div>
+            <input type="file" id="fileInput" style="display: none;">
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+
+        <div class="metadata-form">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" placeholder="Enter document title">
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" placeholder="Enter document description">
+            </div>
+            <div class="form-group">
+                <label for="tags">Tags</label>
+                <input type="text" id="tags" placeholder="Enter tags separated by commas">
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" id="category" placeholder="Enter category">
+            </div>
+            <div class="form-group">
+                <label for="version">Version</label>
+                <input type="text" id="version" placeholder="Enter version">
+            </div>
+            <button class="upload-btn" id="uploadBtn" disabled>Upload</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Uploading...</p>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Check authentication
+        window.addEventListener('DOMContentLoaded', async () => {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            
+            if (!user || !token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Verify session with server
+            try {
+                const response = await fetch('http://localhost:4000/api/auth/status');
+                const data = await response.json();
+                if (!data.authenticated && !user) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        });
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+
+        let selectedFile = null;
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            selectedFile = file;
+            fileInfo.innerHTML = `
+                <strong>Selected File:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                <strong>Type:</strong> ${file.type || 'Unknown'}
+            `;
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+
+            // Auto-fill title if empty
+            const titleInput = document.getElementById('title');
+            if (!titleInput.value) {
+                titleInput.value = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            }
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const tagsInput = document.getElementById('tags').value.trim();
+            const category = document.getElementById('category').value.trim();
+            const version = document.getElementById('version').value.trim();
+
+            if (!title) {
+                showStatus('Please enter a title', 'error');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            loading.style.display = 'block';
+            status.style.display = 'none';
+
+            try {
+                // Step 1: Create document metadata
+                const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+                
+                const metadata = {
+                    user: {
+                        email: "user@example.com",
+                        displayName: "User"
+                    },
+                    document: {
+                        title: title,
+                        description: description || null
+                    },
+                    tags: tags
+                };
+
+                const metadataResponse = await fetch('http://localhost:4000/api/documents/metadata', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(metadata)
+                });
+
+                if (!metadataResponse.ok) {
+                    const error = await metadataResponse.json();
+                    throw new Error(error.details || error.error || 'Failed to create document metadata');
+                }
+
+                const metadataResult = await metadataResponse.json();
+                const documentId = metadataResult.documentId;
+
+                // Step 2: Upload file
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const uploadResponse = await fetch(`http://localhost:4000/api/documents/${documentId}/file`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    const error = await uploadResponse.json();
+                    throw new Error(error.details || error.error || 'Failed to upload file');
+                }
+
+                const uploadResult = await uploadResponse.json();
+                
+                showStatus(`File uploaded successfully! Document ID: ${documentId}`, 'success');
+                
+                // Reset form
+                resetForm();
+
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function resetForm() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('tags').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('version').value = '';
+            uploadBtn.disabled = true;
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('http://localhost:4000/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
