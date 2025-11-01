@@ -237,28 +237,30 @@
     <script>
         // Check authentication
         window.addEventListener('DOMContentLoaded', async () => {
-            const user = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
-            
-            if (!user || !token) {
-                window.location.href = 'login.html';
-                return;
-            }
+  try {
+    const response = await fetch('http://localhost:4000/api/auth/status', {
+      credentials: 'include'
+    });
+    const data = await response.json();
 
-            // Verify session with server
-            try {
-                const response = await fetch('http://localhost:4000/api/auth/status');
-                const data = await response.json();
-                if (!data.authenticated && !user) {
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('token');
-                    window.location.href = 'login.html';
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-            }
-        });
+    if (!data.authenticated) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+      return;
+    }
 
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    localStorage.setItem('token', 'session');
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    window.location.href = 'login.html';
+  }
+});
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const fileInfo = document.getElementById('fileInfo');
